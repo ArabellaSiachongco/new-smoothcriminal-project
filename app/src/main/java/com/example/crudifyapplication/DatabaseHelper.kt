@@ -125,43 +125,77 @@ class DatabaseHelper(context: Context?) :
             return db.rawQuery("SELECT * FROM " + TABLE_PRODUCTS, null)
         }
 
-    fun insertOrUpdateProduct(productName: String, productQuantity: Int): Boolean {
+    fun insertOrUpdateProduct(productName: String?, productQuantity: Int?): Boolean {
+
         val db = this.writableDatabase
 
         // Check if product already exists
         val cursor = db.rawQuery(
-            "SELECT * FROM " + TABLE_PRODUCTS + " WHERE " + COLUMN_PRODUCT_NAME + " = ?",
+            "SELECT * FROM $TABLE_PRODUCTS WHERE $COLUMN_PRODUCT_NAME = ?",
             arrayOf(productName)
         )
+
         if (cursor.moveToFirst()) {
             // Product exists, update quantity
-            val currentQuantity = cursor.getInt(
-                cursor.getColumnIndexOrThrow(
-                    COLUMN_PRODUCT_QUANTITY
-                )
-            )
-            val contentValues = ContentValues()
-            contentValues.put(COLUMN_PRODUCT_QUANTITY, currentQuantity + productQuantity)
+            val currentQuantity = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_PRODUCT_QUANTITY))
+
+            // Safely add quantities, ensuring productQuantity is non-null
+            val newQuantity = currentQuantity + (productQuantity ?: 0)
+
+            val contentValues = ContentValues().apply {
+                put(COLUMN_PRODUCT_QUANTITY, newQuantity)
+            }
+
             db.update(
                 TABLE_PRODUCTS,
                 contentValues,
-                COLUMN_PRODUCT_NAME + " = ?",
+                "$COLUMN_PRODUCT_NAME = ?",
                 arrayOf(productName)
             )
+
             cursor.close()
             db.close()
             return true
         } else {
             // Product does not exist, insert new entry
-            val contentValues = ContentValues()
-            contentValues.put(COLUMN_PRODUCT_NAME, productName)
-            contentValues.put(COLUMN_PRODUCT_QUANTITY, productQuantity)
+            val contentValues = ContentValues().apply {
+                put(COLUMN_PRODUCT_NAME, productName)
+                put(COLUMN_PRODUCT_QUANTITY, productQuantity ?: 0)
+            }
+
             val result = db.insert(TABLE_PRODUCTS, null, contentValues)
             cursor.close()
             db.close()
+
             return result != -1L
         }
     }
+
+
+
+    fun getProductById(id: Int): Product? {
+        val db = this.readableDatabase
+        val cursor = db.query(
+            TABLE_PRODUCTS,
+            null,
+            "$COLUMN_PRODUCT_ID = ?",
+            arrayOf(id.toString()),
+            null, null, null
+        )
+
+        return if (cursor.moveToFirst()) {
+            Product(
+                id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_PRODUCT_ID)),
+                name = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_PRODUCT_NAME)),
+                quantity = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_PRODUCT_QUANTITY))
+            )
+        } else {
+            null
+        }.also {
+            cursor.close()
+        }
+    }
+
 
     companion object {
         private const val DATABASE_NAME = "scanner.db"

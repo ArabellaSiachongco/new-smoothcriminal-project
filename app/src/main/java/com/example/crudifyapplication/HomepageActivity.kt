@@ -1,39 +1,85 @@
 package com.example.crudifyapplication
 
+import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 class HomepageActivity : AppCompatActivity() {
+
+    private lateinit var homeIcon: ImageView
+    private lateinit var textView: TextView
+    private lateinit var createNewButton: Button
+    private lateinit var productRecyclerView: RecyclerView
+    private lateinit var productAdapter: ProductAdapter
+    private val productList: MutableList<Product> = mutableListOf() // Empty product list
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_homepage) // Make sure this matches your Home Page layout file name
+        setContentView(R.layout.product_list) // Replace with the correct XML file name if different
 
-        // Adjust insets for edge-to-edge layout
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+        // Initialize UI components
+        homeIcon = findViewById(R.id.homeIcon)
+        textView = findViewById(R.id.textView)
+        createNewButton = findViewById(R.id.createNewButton)
+        productRecyclerView = findViewById(R.id.productRecyclerView)
+
+        // Set up RecyclerView with an empty list
+        productRecyclerView.layoutManager = LinearLayoutManager(this)
+        productAdapter = ProductAdapter(productList)
+        productRecyclerView.adapter = productAdapter
+
+        // Set up click listeners
+        homeIcon.setOnClickListener {
+            // Handle home icon click if necessary
         }
 
-        // Retrieve the username from the intent
-        val username = intent.getStringExtra("USERNAME")
-
-        // Find the TextView and set the username text
-        val crudifyText: TextView = findViewById(R.id.crudifyText)
-        if (!username.isNullOrEmpty()) {
-            crudifyText.text = username // Display the username
-        } else {
-            crudifyText.text = "CRUDIFY" // Default text if username is not available
+        createNewButton.setOnClickListener {
+            // Navigate to CreateTableActivity
+            val intent = Intent(this, CreateTableActivity::class.java)
+            startActivity(intent)
         }
+    }
 
-        // Set up the "Create New" button or other UI elements if needed
-        val createNewBtn: Button = findViewById(R.id.createNewBtn)
-        createNewBtn.setOnClickListener {
-            // Add action for the Create New button here
-        }
+    // Function to add a new product and update the RecyclerView
+    private fun addNewProduct(product: Product) {
+        productList.add(product)
+        productAdapter.notifyItemInserted(productList.size - 1) // Notify adapter of new item
+    }
+}
+
+// Data class for Product
+data class Product(val id: Int, val name: String, val quantity: Int)
+
+// Adapter for RecyclerView
+class ProductAdapter(private val productList: List<Product>) :
+    RecyclerView.Adapter<ProductAdapter.ProductViewHolder>() {
+
+    class ProductViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        val productId: TextView = view.findViewById(R.id.productIdTextView)
+        val productName: TextView = view.findViewById(R.id.productNameTextView)
+        val productQuantity: TextView = view.findViewById(R.id.productQuantityTextView)
+    }
+
+    override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): ProductViewHolder {
+        val inflater = android.view.LayoutInflater.from(parent.context)
+        val view = inflater.inflate(R.layout.product_item, parent, false)
+        return ProductViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
+        val product = productList[position]
+        holder.productId.text = product.id.toString()
+        holder.productName.text = product.name
+        holder.productQuantity.text = product.quantity.toString()
+    }
+
+    override fun getItemCount(): Int {
+        return productList.size
     }
 }

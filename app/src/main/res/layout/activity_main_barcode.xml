@@ -6,6 +6,13 @@
     android:gravity="center">
 
     <TextView
+        android:id="@+id/welcomeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Welcome!"
+        android:textSize="20sp" />
+
+    <TextView
         android:id="@+id/result_text"
         android:layout_width="match_parent"
         android:layout_height="564dp"
@@ -19,16 +26,6 @@
         android:textIsSelectable="true"
         android:textSize="16sp"
         android:visibility="gone"/>
-
-    <Button
-        android:id="@+id/btnScanBarcode"
-        android:layout_width="382dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:minHeight="48dp"
-        android:padding="16dp"
-        android:text="Scan Barcode"
-        android:textSize="16sp" />
 
     <Button
         android:id="@+id/btnShowData"
